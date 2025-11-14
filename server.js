@@ -170,7 +170,7 @@ app.get("/edit/:id_post", verify, async (req, res) => {
 // =======================================================
 // API: Add Post
 // =======================================================
-app.post("/add", verify, async (req, res) => {
+app.post("/add/:id_user", verify, async (req, res) => {
     const id_user = req.user.id;
     const {id_post, Head, Body } = req.body;
     
@@ -192,7 +192,7 @@ app.post("/add", verify, async (req, res) => {
 // =======================================================
 // API: Edit Post
 // =======================================================
-app.put("/edit/:id_post", verify, async (req, res) => {
+app.put("/edit/:id_user/:id_post", verify, async (req, res) => {
     const id_user = req.user.id;
     const { id_post } = req.params;
     const { Head, Body } = req.body;
@@ -219,7 +219,7 @@ app.put("/edit/:id_post", verify, async (req, res) => {
 // =======================================================
 // API: Delete Post
 // =======================================================
-app.delete("/delete/:id_post", verify, async (req, res) => {
+app.delete("/delete/:id_user/:id_post", verify, async (req, res) => {
     const id_user = req.user.id;
     const { id_post } = req.params;
 
