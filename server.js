@@ -25,10 +25,10 @@ const db = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
     ssl: { rejectUnauthorized: true },
-    connectTimeout: 20000, // Timeout koneksi diperpanjang 20 detik
-    connectionLimit: 10,   // Jumlah maksimum koneksi
     waitForConnections: true,
-    queueLimit: 0
+    connectionLimit: 10,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
 });
 
 // Fungsi untuk mengetes koneksi Pool saat aplikasi dimulai
