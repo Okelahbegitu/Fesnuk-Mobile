@@ -1,26 +1,25 @@
 import express from "express";
-import mysql from "mysql2/promise";
-import dotenv from "dotenv";
+import mysql from "mysql2";
+import cors from "cors";
 import jwt from "jsonwebtoken";
-
+import bcrypt from "bcryptjs";
+import dotenv  from 'dotenv';
 dotenv.config();
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-const SECRET = process.env.JWT_SECRET || "hehehehha";
 
-// ===== Pool =====
-const pool = mysql.createPool({
+const SECRET = "hehehehha"
+console.log('DB_HOST:', process.env.DB_HOST);
+const db = await mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   user: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
   ssl: { rejectUnauthorized: true }
 });
-pool = global.pool;
 
 db.connect(err => {
     if (err) {
@@ -48,27 +47,32 @@ app.post("/signup", (req, res) => {
     });
 });
 
-app.post("/login", async (req, res) => {
-  try {
+app.post("/login", (req, res) => {
     const { username, password } = req.body;
-    const [rows] = await pool.execute(
-      "SELECT * FROM tb_akun WHERE username = ? AND password = ?",
-      [username, password]
-    );
+    const sql = "SELECT * FROM tb_akun WHERE username = ? AND password = ?";
 
-    if (rows.length > 0) {
-      const user = rows[0];
-      const token = jwt.sign({ id: user.id_user }, SECRET, { expiresIn: "1h" });
-      return res.status(200).json({ message: "Login berhasil", token, user });
-    } else {
-      return res.status(401).json({ message: "Username atau password salah" });
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Error server" });
-  }
+    db.query(sql, [username, password], (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: "Error server" });
+        }
+
+        if (results.length > 0) {
+            const user = results[0];
+            const token = jwt.sign({ id: user.id_user, user: user.username }, SECRET, { expiresIn: "1h" });
+
+            return res.status(200).json({
+                message: "Login berhasil",
+                token: token,
+                user: {
+                    id: user.id_user,
+                    user: user.username
+                }
+            });
+        } else {
+            return res.status(401).json({ message: "Username atau password salah" });
+        }
+    });
 });
-
 
 app.get("/", (req, res) => {
     res.status(200).json({
