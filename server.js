@@ -121,7 +121,7 @@ app.post("/login", async (req, res) => {
 // =======================================================
 // API: Home
 // =======================================================
-app.get("/home", verify, async (req, res) => {
+app.get("/home/:id_user", verify, async (req, res) => {
     const id_user = req.user.id; 
     const sql = "SELECT * FROM tb_post WHERE id_user = ?";
 
