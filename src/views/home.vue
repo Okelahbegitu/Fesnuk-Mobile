@@ -14,6 +14,11 @@
       </ion-header>
 
       <!-- Menampilkan Posts -->
+      <div v-if="posts.length === 0" class="ion-padding text-center text-gray-500 mt-10">
+          <p>Belum ada post yang dibuat.</p>
+          <p>Silakan tekan tombol tambah (+) untuk membuat post pertama Anda.</p>
+      </div>
+
       <ion-card v-for="data in posts" :key="data.id_post">
         <ion-card-header>
           <ion-card-title>{{ data.Head }}</ion-card-title>
@@ -22,17 +27,15 @@
         <ion-card-content>
           <p class="text-gray-600 mb-4">{{ data.Body }}</p>
           <div>
-            <!-- TIDAK PERLU ID USER di URL, hanya ID POST saja -->
             <IonButton color="warning" @click="router.push(`/tabs/edit/${data.id_post}`)">Edit</IonButton>
-            <!-- Menggunakan DELETE endpoint yang telah disesuaikan -->
-            <IonButton color="danger" @click="deletePost(data.id_post)">Hapus</IonButton>
+            <!-- Panggil fungsi konfirmasi delete -->
+            <IonButton color="danger" @click="confirmDelete(data.id_post)">Hapus</IonButton> 
           </div>
         </ion-card-content>
       </ion-card>
 
       <!-- Tombol Fab Add -->
       <IonFab slot="fixed" vertical="bottom" horizontal="end">
-        <!-- TIDAK PERLU ID USER di URL -->
         <IonFabButton @click="router.push(`/tabs/add`)">
           <IonIcon :icon="addCircle"></IonIcon>
         </IonFabButton>
@@ -47,7 +50,16 @@
         @didDismiss="showLogoutAlert = false"
       ></ion-alert>
 
-      <!-- 2. Toast untuk pesan sukses/gagal -->
+      <!-- 2. Alert Modal untuk Konfirmasi Hapus -->
+      <ion-alert
+        :is-open="showDeleteAlert"
+        header="Konfirmasi Hapus"
+        message="Anda yakin ingin menghapus post ini secara permanen?"
+        :buttons="deleteAlertButtons"
+        @didDismiss="showDeleteAlert = false"
+      ></ion-alert>
+
+      <!-- 3. Toast untuk pesan sukses/gagal -->
       <ion-toast
         :is-open="showToast"
         :message="toastMessage"
@@ -63,21 +75,24 @@
 <script setup lang="ts">
 import { 
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardContent, 
-  IonCardTitle, IonButton, IonFab, IonIcon, IonFabButton, IonAlert, IonToast 
+  IonCardTitle, IonButton, IonFab, IonIcon, IonFabButton, IonAlert, IonToast,
+  onIonViewWillEnter // <<< PERUBAHAN KRITIS
 } from '@ionic/vue';
 import { addCircle } from 'ionicons/icons';
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import axios from "axios";
 import router from '@/router';
 
-// State untuk UI
+// State untuk UI & Logic
 const posts = ref<any[]>([]);
 const showLogoutAlert = ref(false);
 const showToast = ref(false);
 const toastMessage = ref('');
 const toastColor = ref<'success' | 'danger'>('success');
+const postIdToDelete = ref<number | null>(null); // State untuk menyimpan ID post yang akan dihapus
+const showDeleteAlert = ref(false); // State untuk menampilkan konfirmasi hapus
 
-// Base URL (penting untuk konsistensi)
+// Base URL
 const API_BASE_URL = "https://fesnuk-mobile.vercel.app";
 
 // --- FUNGSI TOAST ---
@@ -92,31 +107,26 @@ const showNotification = (message: string, color: 'success' | 'danger') => {
 const fetchPosts = async () => {
   const authToken = localStorage.getItem('authToken');
   if (!authToken) {
-    showNotification("Token tidak ditemukan, silakan login ulang.", 'danger');
+    // PUSH ke login jika token tidak ada
     router.push("/tabs/login");
     return;
   }
 
   try {
-    // API ENDPOINT SUDAH DIBUAT HANYA /home (tanpa ID di URL)
+    // Panggilan API TANPA ID USER di URL
     const res = await axios.get(`${API_BASE_URL}/home`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
 
     posts.value = res.data.content;
   } catch (e: any) {
-    const errorMessage = e.response?.data?.message || e.message;
+    const errorMessage = e.response?.data?.message || "Gagal memuat data (Check Vercel Logs).";
     console.error("Error API /home:", errorMessage);
     showNotification(`Gagal memuat post: ${errorMessage}`, 'danger');
   }
 };
 
 const deletePost = async (id_post: number) => {
-  // Mengganti confirm() native dengan Ionic Alert jika diperlukan
-  if (!window.confirm("Apakah Anda yakin ingin menghapus post ini?")) {
-      return;
-  }
-  
   const authToken = localStorage.getItem('authToken');
   if (!authToken) {
       showNotification("Sesi habis, silakan login.", 'danger');
@@ -125,7 +135,6 @@ const deletePost = async (id_post: number) => {
   }
 
   try {
-      // Menggunakan method DELETE dan endpoint yang disesuaikan
       await axios.delete(`${API_BASE_URL}/delete/${id_post}`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
       });
@@ -135,11 +144,26 @@ const deletePost = async (id_post: number) => {
       await fetchPosts(); 
 
   } catch (e: any) {
-      const errorMessage = e.response?.data?.message || e.message;
+      const errorMessage = e.response?.data?.message || "Gagal menghapus post (Server Error).";
       console.error("Error API /delete:", errorMessage);
       showNotification(`Gagal menghapus post: ${errorMessage}`, 'danger');
   }
 };
+
+// Logika Konfirmasi Hapus
+const confirmDelete = (id: number) => {
+    postIdToDelete.value = id;
+    showDeleteAlert.value = true;
+};
+
+const deleteAlertButtons = [
+  { text: 'Batal', role: 'cancel', handler: () => { showDeleteAlert.value = false; } },
+  { text: 'Ya, Hapus', role: 'confirm', handler: () => {
+    if (postIdToDelete.value !== null) {
+      deletePost(postIdToDelete.value);
+    }
+  }},
+];
 
 // Logika Logout
 const handleLogout = () => {
@@ -152,7 +176,8 @@ const logoutAlertButtons = [
   { text: 'Ya', role: 'confirm', handler: handleLogout },
 ];
 
-onMounted(() => {
+// MENGGANTI onMounted() dengan onIonViewWillEnter()
+onIonViewWillEnter(() => {
   fetchPosts();
 });
 </script>
