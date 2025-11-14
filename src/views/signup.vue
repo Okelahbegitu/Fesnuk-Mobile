@@ -52,7 +52,7 @@ function signup (): void {
             password: password.value
         })
     } catch (err){
-        console.log(err)
+        alert(err)
     }
 }
 </script>

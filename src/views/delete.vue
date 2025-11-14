@@ -51,7 +51,7 @@ async function Delete() {
     }, {headers: {'Authorization': `Bearer ${authToken}`}});
     window.location.replace(`https://fesnuk-mobile.vercel.app/tabs/home/${idUser}`)
   } catch (e) {
-    console.log(e);
+    alert(e);
   }
 }
 </script>

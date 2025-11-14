@@ -44,7 +44,7 @@ async function addNewPost(Nhead: string, Nbody: string, iduser: string) {
         }, {headers: {'Authorization': `Bearer ${authToken}`}})
         window.location.replace(`https://fesnuk-mobile.vercel.app/tabs/home/${idUser}`)
     } catch (err){
-        console.log(err)
+        alert(err);
     }
 }
 </script>

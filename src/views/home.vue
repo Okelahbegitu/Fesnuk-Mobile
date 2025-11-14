@@ -53,7 +53,7 @@ onMounted(async () => {
     const res = await axios.get(`https://fesnuk-mobile.vercel.app/home/${idUser}`, {headers: {'Authorization': `Bearer ${authToken}`}});
     posts.value = res.data.content;
   } catch (e) {
-    console.log(e);
+    alert(e);
   }
 });
 
