@@ -3,7 +3,8 @@ import mysql from "mysql2";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-
+import otenv from 'dotenv';
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
