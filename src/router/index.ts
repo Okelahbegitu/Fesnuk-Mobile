@@ -24,19 +24,19 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/signup.vue')
       },
       {
-        path: 'home/:id_user',
+        path: 'home',
         component: () => import('@/views/home.vue')
       },
       {
-        path: 'add/:id_user',
+        path: 'add',
         component: () => import('@/views/add.vue')
       },
       {
-        path: 'edit/:id_user/:id_post',
+        path: 'edit/:id_post',
         component: () => import('@/views/edit.vue')
       },
       {
-        path: 'delete/:id_user/:id_post',
+        path: 'delete/:id_post',
         component: () => import('@/views/delete.vue')
       }
     ]
