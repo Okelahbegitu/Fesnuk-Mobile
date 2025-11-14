@@ -35,19 +35,18 @@ const db = mysql.createPool({
     keepAliveInitialDelay: 0,
 });
 
-// Fungsi untuk mengetes koneksi Pool saat aplikasi dimulai
-//async function testDbConnection() {
-//    try {
-//        // Melakukan query sederhana untuk memverifikasi koneksi
-//        await db.query('SELECT 1'); 
-//        console.log("✅ Terhubung ke database MySQL (Pool connection verified)");
-//    } catch (err) {
-//        // Jika ETIMEDOUT atau error lain terjadi di sini, itu adalah masalah KONEKSI/FIREWALL
-//        console.error("❌ Koneksi Gagal Saat Verifikasi Pool:", err.message);
-//        console.error(">>> ERROR KRITIS: Pastikan server DB berjalan, firewall port 3306 terbuka, dan bind-address = 0.0.0.0.");
-//    }
-//}
-//testDbConnection();
+async function testDbConnection() {
+    try {
+        // Melakukan query sederhana untuk memverifikasi koneksi
+        await db.query('SELECT 1'); 
+        console.log("✅ Terhubung ke database MySQL (Pool connection verified)");
+    } catch (err) {
+        // Jika ETIMEDOUT atau error lain terjadi di sini, itu adalah masalah KONEKSI/FIREWALL
+        console.error("❌ Koneksi Gagal Saat Verifikasi Pool:", err.message);
+        console.error(">>> ERROR KRITIS: Pastikan server DB berjalan, firewall port 3306 terbuka, dan bind-address = 0.0.0.0.");
+    }
+}
+testDbConnection();
 
 // Middleware untuk verifikasi JWT
 function verify(req, res, next) {
