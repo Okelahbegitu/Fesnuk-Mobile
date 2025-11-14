@@ -29,6 +29,7 @@ import { card } from 'ionicons/icons';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
+import router from '@/router';
 const route = useRoute()
 const idUser = route.params.id_user as string;
 const Nhead = ref<string>('')
@@ -42,7 +43,7 @@ async function addNewPost(Nhead: string, Nbody: string, iduser: string) {
             Head: Nhead,
             Body: Nbody
         }, {headers: {'Authorization': `Bearer ${authToken}`}})
-        window.location.replace(`https://fesnuk-mobile.vercel.app/tabs/home/${idUser}`)
+        router.push(`/tabs/home/${idUser}`)
     } catch (err){
         alert(err);
     }

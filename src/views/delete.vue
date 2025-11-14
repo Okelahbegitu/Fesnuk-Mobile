@@ -49,7 +49,7 @@ async function Delete() {
       id_user: idUser,
       id_post: idPost
     }, {headers: {'Authorization': `Bearer ${authToken}`}});
-    window.location.replace(`https://fesnuk-mobile.vercel.app/tabs/home/${idUser}`)
+    router.push(`/tabs/home/${idUser}`)
   } catch (e) {
     alert(e);
   }

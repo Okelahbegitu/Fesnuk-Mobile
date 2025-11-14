@@ -28,6 +28,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardC
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
+import router from '@/router';
 
 
 
@@ -57,6 +58,7 @@ async function UpdatePost (idUser: string, idPost: string, HeadU: string, BodyU:
       body: BodyU
     }, {headers: {'Authorization': `Bearer ${authToken}`}});
     alert(res.data.message);
+    router.push(`/tabs/home/${idUser}`)
   } catch (err) {
     alert(err);
   }
