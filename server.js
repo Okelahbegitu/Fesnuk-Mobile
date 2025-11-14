@@ -125,25 +125,22 @@ app.post("/login", async (req, res) => {
 // API: Home
 // =======================================================
 app.get("/home", verify, async (req, res) => {
-    const id_user = req.user.id; 
-    const sql = "SELECT * FROM tb_post WHERE id_user = ?";
+  const id_user = req.user.id; 
+  const sql = "SELECT * FROM tb_post WHERE id_user = ?";
 
-    try {
-        const [results] = await db.query(sql, [id_user]);
+  try {
+    const [results] = await db.query(sql, [id_user]);
 
-        if (results.length > 0) {
-            return res.json({
-                message: `Meload content untuk user ${id_user} berhasil`,
-                content: results
-            });
-        } else {
-            return res.status(404).json({ message: "Tidak ada post ditemukan dengan id " + id_user });
-        }
-    } catch (err) {
-        console.error("Error saat mengambil home content:", err);
-        return res.status(500).json({ message: "Error server" });
-    }
+    return res.status(200).json({
+      message: results.length > 0 ? `Meload content untuk user ${id_user} berhasil` : "Belum ada post",
+      content: results // array bisa kosong
+    });
+  } catch (err) {
+    console.error("Error saat mengambil home content:", err);
+    return res.status(500).json({ message: "Error server" });
+  }
 });
+
 
 // =======================================================
 // API: Get Post to Edit

@@ -49,14 +49,24 @@ const posts = ref<any[]>([]);
 
 onMounted(async () => {
   try {
-    const authToken = localStorage.getItem('authToken')
-    const res = await axios.get(`https://fesnuk-mobile.vercel.app/home`, {headers: {'Authorization': `Bearer ${authToken}`}});
-    posts.value = res.data.content;
-    alert(localStorage.getItem('authToken'))
-  } catch (e) {
-    alert(e);
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      alert("Token tidak ditemukan, silakan login ulang.");
+      router.push("/tabs/login");
+      return;
+    }
+
+    const res = await axios.get(`https://fesnuk-mobile.vercel.app/home`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    posts.value = res.data.content; // array, bisa kosong
+  } catch (e: any) {
+    console.log("Error API /home:", e.response?.data || e.message);
+    alert(JSON.stringify(e.response?.data || e.message));
   }
 });
+
 
 
 
