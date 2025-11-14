@@ -52,6 +52,7 @@ onMounted(async () => {
     const authToken = localStorage.getItem('authToken')
     const res = await axios.get(`https://fesnuk-mobile.vercel.app/home`, {headers: {'Authorization': `Bearer ${authToken}`}});
     posts.value = res.data.content;
+    alert(localStorage.getItem('authToken'))
   } catch (e) {
     alert(e);
   }
