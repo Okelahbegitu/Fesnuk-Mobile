@@ -89,7 +89,8 @@ app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const sql = "SELECT id_user, username, password FROM tb_akun WHERE username = ?";
+        // Ambil user berdasarkan username
+        const sql = "SELECT * FROM tb_akun WHERE username = ?";
         const [results] = await db.promise().query(sql, [username]);
 
         if (results.length === 0) {
@@ -97,29 +98,34 @@ app.post("/login", async (req, res) => {
         }
 
         const user = results[0];
-        
-        // 1. Bandingkan password yang dimasukkan dengan hash yang tersimpan
-        const isMatch = await bcrypt.compare(password, user.password);
 
-        if (isMatch) {
-            const token = jwt.sign({ id: user.id_user, user: user.username }, SECRET, { expiresIn: "1h" });
-
-            return res.status(200).json({
-                message: "Login berhasil",
-                token: token,
-                user: {
-                    id: user.id_user,
-                    user: user.username
-                }
-            });
-        } else {
+        // Cek password (kalau plain text)
+        if (user.password !== password) {
             return res.status(401).json({ message: "Username atau password salah" });
         }
+
+        // Buat token
+        const token = jwt.sign(
+            { id: user.id_user, user: user.username },
+            SECRET,
+            { expiresIn: "1h" }
+        );
+
+        return res.status(200).json({
+            message: "Login berhasil",
+            token,
+            user: {
+                id: user.id_user,
+                username: user.username
+            }
+        });
+
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Error server saat login" });
     }
 });
+
 
 // Endpoint default
 app.get("/", (req, res) => {
