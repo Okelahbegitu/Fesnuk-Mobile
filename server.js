@@ -45,7 +45,7 @@ async function testDbConnection() {
     } catch (err) {
         // Jika ETIMEDOUT atau error lain terjadi di sini, itu adalah masalah KONEKSI/FIREWALL
         console.error("❌ Koneksi Gagal Saat Verifikasi Pool:", err.message);
-        console.error(">>> ERROR KRITIS: Pastikan server DB berjalan, firewall port 3306 terbuka, dan bind-address = 0.0.0.0.");
+        console.error(">>> ERROR KRITIS: Pastikan server DB berjalan, firewall port 4000 terbuka, dan bind-address = 0.0.0.0.");
     }
 }
 testDbConnection();
