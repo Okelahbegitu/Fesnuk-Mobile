@@ -28,10 +28,12 @@ const db = mysql.createPool({
     user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    ssl: { rejectUnauthorized: false  },
+    // Diperbarui: Mengizinkan sertifikat yang tidak diverifikasi, baik untuk Vercel
+    ssl: { rejectUnauthorized: false }, 
     waitForConnections: true,
     connectionLimit: 10,
-    enableKeepAlive: true,
+    // Ditambahkan: Konfigurasi Keep Alive untuk Vercel
+    enableKeepAlive: true, 
     keepAliveInitialDelay: 0,
 });
 
@@ -125,20 +127,20 @@ app.post("/login", async (req, res) => {
 // API: Home
 // =======================================================
 app.get("/home", verify, async (req, res) => {
-  const id_user = req.user.id; 
-  const sql = "SELECT * FROM tb_post WHERE id_user = ?";
+    const id_user = req.user.id; 
+    const sql = "SELECT * FROM tb_post WHERE id_user = ?";
 
-  try {
-    const [results] = await db.query(sql, [id_user]);
+    try {
+        const [results] = await db.query(sql, [id_user]);
 
-    return res.status(200).json({
-      message: results.length > 0 ? `Meload content untuk user ${id_user} berhasil` : "Belum ada post",
-      content: results // array bisa kosong
-    });
-  } catch (err) {
-    console.error("Error saat mengambil home content:", err);
-    return res.status(500).json({ message: "Error server" });
-  }
+        return res.status(200).json({
+            message: results.length > 0 ? `Meload content untuk user ${id_user} berhasil` : "Belum ada post",
+            content: results // array bisa kosong
+        });
+    } catch (err) {
+        console.error("Error saat mengambil home content:", err);
+        return res.status(500).json({ message: "Error server" });
+    }
 });
 
 
@@ -172,13 +174,15 @@ app.get("/edit/:id_post", verify, async (req, res) => {
 // =======================================================
 app.post("/add", verify, async (req, res) => {
     const id_user = req.user.id;
-    const {id_post, Head, Body } = req.body;
+    // id_post tidak diambil karena auto-increment
+    const { Head, Body } = req.body; 
     
     if (!Head || !Body) {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
     }
 
-    const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?, ?)";
+    // Perbaikan: Hanya 3 placeholder untuk 3 nilai
+    const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?)"; 
 
     try {
         await db.query(query, [id_user, Head, Body]);
