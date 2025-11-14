@@ -1,8 +1,8 @@
 import express from "express";
-import mysql from "mysql2";
+// Ubah import ke mysql2/promise untuk fungsionalitas Promise Pool
+import mysql from "mysql2/promise"; 
 import cors from "cors";
 import jwt from "jsonwebtoken";
-// Hashing (bcryptjs) dihapus sesuai permintaan
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,31 +11,39 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// PENTING: Gunakan kunci yang lebih aman di lingkungan produksi
+// Kunci rahasia untuk JWT
 const SECRET = process.env.JWT_SECRET || "kunci-rahasia-default-yang-aman";
 
 console.log('DB_HOST:', process.env.DB_HOST);
 
-// Tambahkan connectTimeout 20 detik untuk membantu diagnosis ETIMEDOUT
-const db = mysql.createConnection({
+// Menggunakan Connection Pool (db) untuk stabilitas koneksi
+// Pool menangani koneksi yang tertutup dan membuat ulang koneksi secara otomatis
+const db = mysql.createPool({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
     ssl: { rejectUnauthorized: true },
-    connectTimeout: 20000 // Timeout koneksi diperpanjang 20 detik
+    connectTimeout: 20000, // Timeout koneksi diperpanjang 20 detik
+    connectionLimit: 10,   // Jumlah maksimum koneksi
+    waitForConnections: true,
+    queueLimit: 0
 });
 
-db.connect(err => {
-    if (err) {
-        // Jika ETIMEDOUT terjadi, cek firewall/bind-address di server DB
-        console.error("❌ Koneksi gagal:", err.message);
-        console.error("DEBUG: Pastikan server DB berjalan, firewall terbuka (port 3306), dan bind-address = 0.0.0.0.");
-    } else {
-        console.log("✅ Terhubung ke database MySQL");
+// Fungsi untuk mengetes koneksi Pool saat aplikasi dimulai
+async function testDbConnection() {
+    try {
+        // Melakukan query sederhana untuk memverifikasi koneksi
+        await db.query('SELECT 1'); 
+        console.log("✅ Terhubung ke database MySQL (Pool connection verified)");
+    } catch (err) {
+        // Jika ETIMEDOUT atau error lain terjadi di sini, itu adalah masalah KONEKSI/FIREWALL
+        console.error("❌ Koneksi Gagal Saat Verifikasi Pool:", err.message);
+        console.error(">>> ERROR KRITIS: Pastikan server DB berjalan, firewall port 3306 terbuka, dan bind-address = 0.0.0.0.");
     }
-});
+}
+testDbConnection();
 
 // Middleware untuk verifikasi JWT
 function verify(req, res, next) {
@@ -45,13 +53,13 @@ function verify(req, res, next) {
     const token = authHeader.split(" ")[1];
     jwt.verify(token, SECRET, (err, user) => {
         if (err) return res.status(403).json({ message: "Token tidak valid atau kadaluarsa" });
-        req.user = user; // Data user dari token (id, username) disimpan di sini
+        req.user = user;
         next();
     });
 }
 
 // =======================================================
-// API: Signup (Menggunakan Password Plaintext Sesuai Permintaan)
+// API: Signup
 // =======================================================
 app.post("/signup", async (req, res) => {
     const { username, password } = req.body;
@@ -61,33 +69,33 @@ app.post("/signup", async (req, res) => {
     }
 
     try {
-        // Cek apakah username sudah ada
-        const [rows] = await db.promise().query("SELECT id_user FROM tb_akun WHERE username = ?", [username]);
+        // Query menggunakan Pool
+        const [rows] = await db.query("SELECT id_user FROM tb_akun WHERE username = ?", [username]);
         if (rows.length > 0) {
             return res.status(409).json({ message: "Username sudah digunakan" });
         }
 
-        // PERINGATAN: Password disimpan sebagai plaintext!
+        // Simpan user baru
         const sql = "INSERT INTO tb_akun (username, password) VALUES (?, ?)";
-        await db.promise().query(sql, [username, password]);
+        await db.query(sql, [username, password]);
 
         res.status(201).json({ message: "Akun berhasil dibuat" });
     } catch (err) {
-        console.error(err);
+        console.error("Error saat signup:", err);
         return res.status(500).json({ message: "Gagal daftar karena error server" });
     }
 });
 
 // =======================================================
-// API: Login (Menggunakan Password Plaintext Sesuai Permintaan)
+// API: Login
 // =======================================================
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // Query untuk mencocokkan username DAN password plaintext
+        // Query menggunakan Pool
         const sql = "SELECT id_user, username FROM tb_akun WHERE username = ? AND password = ?";
-        const [results] = await db.promise().query(sql, [username, password]); 
+        const [results] = await db.query(sql, [username, password]); 
 
         if (results.length > 0) {
             const user = results[0];
@@ -105,27 +113,20 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ message: "Username atau password salah" });
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error saat login:", err);
         return res.status(500).json({ message: "Error server saat login" });
     }
 });
 
-// Endpoint default
-app.get("/", (req, res) => {
-    res.status(200).json({
-        message: "API berjalan dengan baik. Silakan gunakan endpoint /login atau /signup."
-    });
-});
-
 // =======================================================
-// API: Home (Mengambil id_user dari JWT)
+// API: Home
 // =======================================================
 app.get("/home", verify, async (req, res) => {
-    const id_user = req.user.id; // AMBIL DARI TOKEN (aman)
+    const id_user = req.user.id; 
     const sql = "SELECT * FROM tb_post WHERE id_user = ?";
 
     try {
-        const [results] = await db.promise().query(sql, [id_user]);
+        const [results] = await db.query(sql, [id_user]);
 
         if (results.length > 0) {
             res.json({
@@ -136,21 +137,21 @@ app.get("/home", verify, async (req, res) => {
             res.status(404).json({ message: "Tidak ada post ditemukan" });
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error saat mengambil home content:", err);
         return res.status(500).json({ message: "Error server" });
     }
 });
 
 // =======================================================
-// API: Get Post to Edit (Mengambil id_user dari JWT)
+// API: Get Post to Edit
 // =======================================================
 app.get("/edit/:id_post", verify, async (req, res) => {
-    const id_user = req.user.id; // AMBIL DARI TOKEN
+    const id_user = req.user.id;
     const { id_post } = req.params;
     const sql = "SELECT * FROM tb_post WHERE id_post = ? AND id_user = ?";
 
     try {
-        const [results] = await db.promise().query(sql, [id_post, id_user]);
+        const [results] = await db.query(sql, [id_post, id_user]);
 
         if (results.length > 0) {
             res.json({
@@ -161,16 +162,16 @@ app.get("/edit/:id_post", verify, async (req, res) => {
             res.status(404).json({ message: "Post tidak ditemukan" });
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error saat mengambil post untuk edit:", err);
         return res.status(500).json({ message: "Error server" });
     }
 });
 
 // =======================================================
-// API: Add Post (Mengambil id_user dari JWT)
+// API: Add Post
 // =======================================================
 app.post("/add", verify, async (req, res) => {
-    const id_user = req.user.id; // AMBIL DARI TOKEN
+    const id_user = req.user.id;
     const { Head, Body } = req.body;
     
     if (!Head || !Body) {
@@ -180,19 +181,19 @@ app.post("/add", verify, async (req, res) => {
     const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?)";
 
     try {
-        await db.promise().query(query, [id_user, Head, Body]);
+        await db.query(query, [id_user, Head, Body]);
         res.status(201).json({ message: "Berhasil dibuat" });
     } catch (err) {
-        console.error(err);
+        console.error("Error saat menambah post:", err);
         return res.status(500).json({ message: "Gagal membuat content" });
     }
 });
 
 // =======================================================
-// API: Edit Post (Mengambil id_user dari JWT)
+// API: Edit Post
 // =======================================================
 app.put("/edit/:id_post", verify, async (req, res) => {
-    const id_user = req.user.id; // AMBIL DARI TOKEN
+    const id_user = req.user.id;
     const { id_post } = req.params;
     const { Head, Body } = req.body;
     
@@ -201,9 +202,8 @@ app.put("/edit/:id_post", verify, async (req, res) => {
     }
 
     try {
-        // Cek kepemilikan dan update
         const updateQuery = "UPDATE tb_post SET Head = ?, Body = ? WHERE id_post = ? AND id_user = ?";
-        const [resultu] = await db.promise().query(updateQuery, [Head, Body, id_post, id_user]);
+        const [resultu] = await db.query(updateQuery, [Head, Body, id_post, id_user]);
         
         if (resultu.affectedRows > 0) {
             return res.status(200).json({ message: "Berhasil update post" });
@@ -211,21 +211,21 @@ app.put("/edit/:id_post", verify, async (req, res) => {
             return res.status(404).json({ message: "Post tidak ditemukan atau Anda tidak memiliki izin" });
         }
     } catch (err) {
-        console.log("UPDATE Query Error:", err);
+        console.error("Error saat update post:", err);
         return res.status(500).json({ message: "Server error saat update" });
     }
 });
 
 // =======================================================
-// API: Delete Post (Mengambil id_user dari JWT)
+// API: Delete Post
 // =======================================================
 app.delete("/delete/:id_post", verify, async (req, res) => {
-    const id_user = req.user.id; // AMBIL DARI TOKEN
+    const id_user = req.user.id;
     const { id_post } = req.params;
 
     try {
         const Delquery = "DELETE FROM tb_post WHERE id_user = ? AND id_post = ?";
-        const [result] = await db.promise().query(Delquery, [id_user, id_post]);
+        const [result] = await db.query(Delquery, [id_user, id_post]);
 
         if (result.affectedRows > 0) {
             return res.status(200).json({ message: "Berhasil hapus post" });
@@ -233,9 +233,16 @@ app.delete("/delete/:id_post", verify, async (req, res) => {
             return res.status(404).json({ message: "Post tidak ditemukan atau Anda tidak memiliki izin" });
         }
     } catch (err) {
-        console.log("DELETE Query Error:", err);
+        console.error("Error saat menghapus post:", err);
         return res.status(500).json({ message: "Server error saat delete" });
     }
+});
+
+// Endpoint default
+app.get("/", (req, res) => {
+    res.status(200).json({
+        message: "API berjalan dengan baik. Silakan gunakan endpoint /login atau /signup."
+    });
 });
 
 export default app;
