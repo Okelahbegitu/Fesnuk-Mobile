@@ -74,11 +74,11 @@ app.post("/login", (req, res) => {
     });
 });
 
-app.get("/", (req, res) => {
-    res.status(200).json({
-        message: "API berjalan dengan baik. Silakan gunakan endpoint /login atau lainnya."
-    });
-});
+//app.get("/", (req, res) => {
+//    res.status(200).json({
+//        message: "API berjalan dengan baik. Silakan gunakan endpoint /login atau lainnya."
+//    });
+//});
 
 app.get("/home/:id_user", verify, (req, res) => {
     const id_user = req.params.id_user;
