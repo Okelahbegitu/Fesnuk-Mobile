@@ -3,7 +3,7 @@ import mysql from "mysql2";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import otenv from 'dotenv';
+import dotenv  from 'dotenv';
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -12,13 +12,13 @@ app.use(express.json());
 
 const SECRET = "hehehehha"
 
-// Koneksi ke database
-const db = mysql.createConnection({
-    host: process.env.TIDB_HOST,     // dari TiDB Cloud
-    port: 4000,                       // default TiDB port
-    user: process.env.TIDB_USER,
-    password: process.env.TIDB_PASS,
-    database: 'db_fesnuk'
+const db = await mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  ssl: { rejectUnauthorized: true }
 });
 
 db.connect(err => {
