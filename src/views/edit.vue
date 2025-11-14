@@ -41,7 +41,7 @@ const HeadI = ref<string>('')
 onMounted(async () => {
   try {
         const authToken = localStorage.getItem('authToken')
-    const res = await axios.get(`http://192.168.1.8:3000/edit/${idUser}/${idPost}`, {headers: {'Authorization': `Bearer ${authToken}`}});
+    const res = await axios.get(`https://fesnuk-mobile.vercel.app/edit/${idUser}/${idPost}`, {headers: {'Authorization': `Bearer ${authToken}`}});
     posts.value = res.data.content
   } catch (e) {
     console.log(e)
@@ -52,7 +52,7 @@ async function UpdatePost (idUser: string, idPost: string, HeadU: string, BodyU:
     console.log("Sending body:", { head: HeadU, body: BodyU });
 
     const authToken = localStorage.getItem('authToken')
-    const res = await axios.post(`http://192.168.1.8:3000/edit/${idUser}/${idPost}`, {
+    const res = await axios.post(`https://fesnuk-mobile.vercel.app/edit/${idUser}/${idPost}`, {
       head: HeadU,
       body: BodyU
     }, {headers: {'Authorization': `Bearer ${authToken}`}});

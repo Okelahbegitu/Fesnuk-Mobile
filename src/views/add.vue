@@ -36,13 +36,13 @@ const Nbody = ref<string>('')
 async function addNewPost(Nhead: string, Nbody: string, iduser: string) {
     try{
         const authToken = localStorage.getItem('authToken')
-        await axios.post(`http://192.168.1.8:3000/add/${idUser}`, {
+        await axios.post(`https://fesnuk-mobile.vercel.app/add/${idUser}`, {
             id_user: idUser,
             id_post: null,
             Head: Nhead,
             Body: Nbody
         }, {headers: {'Authorization': `Bearer ${authToken}`}})
-        window.location.replace(`http://100.108.76.111:8100/tabs/home/${idUser}`)
+        window.location.replace(`https://fesnuk-mobile.vercel.app/tabs/home/${idUser}`)
     } catch (err){
         console.log(err)
     }

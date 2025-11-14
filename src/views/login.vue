@@ -38,8 +38,7 @@ const user = ref('')
 const pass = ref('')
 async function login() {
     try {
-        const serverIp = "192.168.1.8"; // Ganti dengan IP address server Anda
-        const res = await axios.post(`http://${serverIp}:3000/login`, {
+        const res = await axios.post(`https://fesnuk-mobile.vercel.app/login`, {
             username: user.value,
             password: pass.value
         })

@@ -45,11 +45,11 @@ const Nbody = ref<string>('')
 async function Delete() {
   try {
     const authToken = localStorage.getItem('authToken')
-    await axios.post(`http://192.168.1.8:3000/delete/${idUser}/${idPost}`, {
+    await axios.post(`https://fesnuk-mobile.vercel.app/delete/${idUser}/${idPost}`, {
       id_user: idUser,
       id_post: idPost
     }, {headers: {'Authorization': `Bearer ${authToken}`}});
-    window.location.replace(`http://100.108.76.111:8100/tabs/home/${idUser}`)
+    window.location.replace(`https://fesnuk-mobile.vercel.app/tabs/home/${idUser}`)
   } catch (e) {
     console.log(e);
   }
