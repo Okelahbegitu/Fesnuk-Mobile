@@ -14,8 +14,12 @@ app.use(express.json());
 // Kunci rahasia untuk JWT
 const SECRET = process.env.JWT_SECRET || "kunci-rahasia-default-yang-aman";
 
-console.log('DB_HOST:', process.env.DB_HOST);
-
+//console.log('DB_HOST:', process.env.DB_HOST);
+console.log("Trying connect to:", {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USERNAME
+});
 // Menggunakan Connection Pool (db) untuk stabilitas koneksi
 // Pool menangani koneksi yang tertutup dan membuat ulang koneksi secara otomatis
 const db = mysql.createPool({
