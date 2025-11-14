@@ -2,7 +2,7 @@ import express from "express";
 import mysql from "mysql2";
 import cors from "cors";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs"; // Import bcryptjs
+// Hashing (bcryptjs) dihapus sesuai permintaan
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,7 +16,7 @@ const SECRET = process.env.JWT_SECRET || "kunci-rahasia-default-yang-aman";
 
 console.log('DB_HOST:', process.env.DB_HOST);
 
-// Tambahkan connectTimeout untuk membantu mengatasi ETIMEDOUT dan debugging
+// Tambahkan connectTimeout 20 detik untuk membantu diagnosis ETIMEDOUT
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -24,7 +24,7 @@ const db = mysql.createConnection({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
     ssl: { rejectUnauthorized: true },
-    connectTimeout: 20000 // Timeout koneksi 20 detik (default 10)
+    connectTimeout: 20000 // Timeout koneksi diperpanjang 20 detik
 });
 
 db.connect(err => {
@@ -51,7 +51,7 @@ function verify(req, res, next) {
 }
 
 // =======================================================
-// API: Signup (Dengan Password Hashing)
+// API: Signup (Menggunakan Password Plaintext Sesuai Permintaan)
 // =======================================================
 app.post("/signup", async (req, res) => {
     const { username, password } = req.body;
@@ -61,19 +61,15 @@ app.post("/signup", async (req, res) => {
     }
 
     try {
-        // 1. Cek apakah username sudah ada
+        // Cek apakah username sudah ada
         const [rows] = await db.promise().query("SELECT id_user FROM tb_akun WHERE username = ?", [username]);
         if (rows.length > 0) {
             return res.status(409).json({ message: "Username sudah digunakan" });
         }
 
-        // 2. Hash password sebelum disimpan
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // 3. Simpan user baru
+        // PERINGATAN: Password disimpan sebagai plaintext!
         const sql = "INSERT INTO tb_akun (username, password) VALUES (?, ?)";
-        await db.promise().query(sql, [username, hashedPassword]);
+        await db.promise().query(sql, [username, password]);
 
         res.status(201).json({ message: "Akun berhasil dibuat" });
     } catch (err) {
@@ -83,49 +79,36 @@ app.post("/signup", async (req, res) => {
 });
 
 // =======================================================
-// API: Login (Dengan Password Comparison)
+// API: Login (Menggunakan Password Plaintext Sesuai Permintaan)
 // =======================================================
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // Ambil user berdasarkan username
-        const sql = "SELECT * FROM tb_akun WHERE username = ?";
-        const [results] = await db.promise().query(sql, [username]);
+        // Query untuk mencocokkan username DAN password plaintext
+        const sql = "SELECT id_user, username FROM tb_akun WHERE username = ? AND password = ?";
+        const [results] = await db.promise().query(sql, [username, password]); 
 
-        if (results.length === 0) {
+        if (results.length > 0) {
+            const user = results[0];
+            const token = jwt.sign({ id: user.id_user, user: user.username }, SECRET, { expiresIn: "1h" });
+
+            return res.status(200).json({
+                message: "Login berhasil",
+                token: token,
+                user: {
+                    id: user.id_user,
+                    user: user.username
+                }
+            });
+        } else {
             return res.status(401).json({ message: "Username atau password salah" });
         }
-
-        const user = results[0];
-
-        // Cek password (kalau plain text)
-        if (user.password !== password) {
-            return res.status(401).json({ message: "Username atau password salah" });
-        }
-
-        // Buat token
-        const token = jwt.sign(
-            { id: user.id_user, user: user.username },
-            SECRET,
-            { expiresIn: "1h" }
-        );
-
-        return res.status(200).json({
-            message: "Login berhasil",
-            token,
-            user: {
-                id: user.id_user,
-                username: user.username
-            }
-        });
-
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Error server saat login" });
     }
 });
-
 
 // Endpoint default
 app.get("/", (req, res) => {
@@ -135,7 +118,7 @@ app.get("/", (req, res) => {
 });
 
 // =======================================================
-// API: Home (Mengambil id_user dari JWT, bukan dari URL)
+// API: Home (Mengambil id_user dari JWT)
 // =======================================================
 app.get("/home", verify, async (req, res) => {
     const id_user = req.user.id; // AMBIL DARI TOKEN (aman)
@@ -194,7 +177,6 @@ app.post("/add", verify, async (req, res) => {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
     }
 
-    // Perhatikan: id_post seharusnya otomatis di-generate oleh database (misalnya AUTO_INCREMENT)
     const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?)";
 
     try {
@@ -212,7 +194,7 @@ app.post("/add", verify, async (req, res) => {
 app.put("/edit/:id_post", verify, async (req, res) => {
     const id_user = req.user.id; // AMBIL DARI TOKEN
     const { id_post } = req.params;
-    const { Head, Body } = req.body; // Menggunakan Head/Body sesuai skema DB Anda
+    const { Head, Body } = req.body;
     
     if (!Head || !Body) {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
@@ -226,7 +208,6 @@ app.put("/edit/:id_post", verify, async (req, res) => {
         if (resultu.affectedRows > 0) {
             return res.status(200).json({ message: "Berhasil update post" });
         } else {
-            // Ini bisa berarti post tidak ditemukan ATAU post bukan milik user ini
             return res.status(404).json({ message: "Post tidak ditemukan atau Anda tidak memiliki izin" });
         }
     } catch (err) {
@@ -256,6 +237,5 @@ app.delete("/delete/:id_post", verify, async (req, res) => {
         return res.status(500).json({ message: "Server error saat delete" });
     }
 });
-
 
 export default app;
