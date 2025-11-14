@@ -134,7 +134,7 @@ app.get("/home", verify, async (req, res) => {
                 content: results
             });
         } else {
-            res.status(404).json({ message: "Tidak ada post ditemukan" });
+            return res.status(404).json({ message: "Tidak ada post ditemukan dengan id " + id_user });
         }
     } catch (err) {
         console.error("Error saat mengambil home content:", err);
