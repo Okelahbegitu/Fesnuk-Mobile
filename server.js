@@ -121,7 +121,7 @@ app.post("/login", async (req, res) => {
 // =======================================================
 // API: Home
 // =======================================================
-app.get("/home/:id_user", verify, async (req, res) => {
+app.get("/home", verify, async (req, res) => {
     const id_user = req.user.id; 
     const sql = "SELECT * FROM tb_post WHERE id_user = ?";
 
@@ -170,7 +170,7 @@ app.get("/edit/:id_post", verify, async (req, res) => {
 // =======================================================
 // API: Add Post
 // =======================================================
-app.post("/add/:id_user", verify, async (req, res) => {
+app.post("/add", verify, async (req, res) => {
     const id_user = req.user.id;
     const {id_post, Head, Body } = req.body;
     
@@ -178,11 +178,14 @@ app.post("/add/:id_user", verify, async (req, res) => {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
     }
 
-    const query = "INSERT INTO tb_post (id_post ,id_user, Head, Body) VALUES (?, ?, ?, ?)";
+    const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?, ?)";
 
     try {
-        await db.query(query, [id_post, id_user, Head, Body]);
-        return res.status(201).json({ message: "Berhasil dibuat" });
+        await db.query(query, [id_user, Head, Body]);
+        return res.status(201).json({ 
+            message: "Berhasil dibuat",
+            user: { id: id_user }
+        });
     } catch (err) {
         console.error("Error saat menambah post:", err);
         return res.status(500).json({ message: "Gagal membuat content" });
@@ -192,9 +195,9 @@ app.post("/add/:id_user", verify, async (req, res) => {
 // =======================================================
 // API: Edit Post
 // =======================================================
-app.put("/edit/:id_user/:id_post", verify, async (req, res) => {
+app.put("/edit/:id_post", verify, async (req, res) => {
     const id_user = req.user.id;
-    const { id_post } = req.params;
+    const id_post = req.params.id_post;
     const { Head, Body } = req.body;
     
     if (!Head || !Body) {
@@ -219,16 +222,17 @@ app.put("/edit/:id_user/:id_post", verify, async (req, res) => {
 // =======================================================
 // API: Delete Post
 // =======================================================
-app.delete("/delete/:id_user/:id_post", verify, async (req, res) => {
+app.delete("/delete/:id_post", verify, async (req, res) => {
     const id_user = req.user.id;
-    const { id_post } = req.params;
+    const id_post = req.params.id_post;
+
 
     try {
         const Delquery = "DELETE FROM tb_post WHERE id_user = ? AND id_post = ?";
         const [result] = await db.query(Delquery, [id_user, id_post]);
 
         if (result.affectedRows > 0) {
-            return res.status(200).json({ message: "Berhasil hapus post" });
+            return res.status(200).json({ message: "Berhasil hapus post", user: { id: id_user} });
         } else {
             return res.status(404).json({ message: "Post tidak ditemukan atau Anda tidak memiliki izin" });
         }

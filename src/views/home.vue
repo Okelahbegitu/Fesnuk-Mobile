@@ -50,7 +50,7 @@ const posts = ref<any[]>([]);
 onMounted(async () => {
   try {
     const authToken = localStorage.getItem('authToken')
-    const res = await axios.get(`https://fesnuk-mobile.vercel.app/home/${idUser}`, {headers: {'Authorization': `Bearer ${authToken}`}});
+    const res = await axios.get(`https://fesnuk-mobile.vercel.app/home`, {headers: {'Authorization': `Bearer ${authToken}`}});
     posts.value = res.data.content;
   } catch (e) {
     alert(e);

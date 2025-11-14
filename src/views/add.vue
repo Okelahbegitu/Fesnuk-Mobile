@@ -37,13 +37,13 @@ const Nbody = ref<string>('')
 async function addNewPost(Nhead: string, Nbody: string, iduser: string) {
     try{
         const authToken = localStorage.getItem('authToken')
-        await axios.post(`https://fesnuk-mobile.vercel.app/add/${idUser}`, {
+        const res = await axios.post(`https://fesnuk-mobile.vercel.app/add`, {
             id_user: idUser,
             id_post: null,
             Head: Nhead,
             Body: Nbody
         }, {headers: {'Authorization': `Bearer ${authToken}`}})
-        router.push(`/tabs/home/${idUser}`)
+        router.push(`/tabs/home/${res.data.user.id}`)
     } catch (err){
         alert(err);
     }

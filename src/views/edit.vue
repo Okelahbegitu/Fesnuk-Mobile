@@ -53,7 +53,7 @@ async function UpdatePost (idUser: string, idPost: string, HeadU: string, BodyU:
     console.log("Sending body:", { head: HeadU, body: BodyU });
 
     const authToken = localStorage.getItem('authToken')
-    const res = await axios.post(`https://fesnuk-mobile.vercel.app/edit/${idUser}/${idPost}`, {
+    const res = await axios.post(`https://fesnuk-mobile.vercel.app/edit/${idPost}`, {
       head: HeadU,
       body: BodyU
     }, {headers: {'Authorization': `Bearer ${authToken}`}});
@@ -62,8 +62,6 @@ async function UpdatePost (idUser: string, idPost: string, HeadU: string, BodyU:
   } catch (err) {
     alert(err);
   }
-
-
 }
 
 </script>
