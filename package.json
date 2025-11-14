@@ -33,6 +33,7 @@
     "ionicons": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.15.3",
+    "pool": "^0.4.1",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0"
   },

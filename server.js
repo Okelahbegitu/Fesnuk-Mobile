@@ -1,25 +1,29 @@
 import express from "express";
-import mysql from "mysql2";
-import cors from "cors";
+import mysql from "mysql2/promise";
+import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import dotenv  from 'dotenv';
+
 dotenv.config();
 const app = express();
-app.use(cors());
 app.use(express.json());
 
+const SECRET = process.env.JWT_SECRET || "hehehehha";
 
-const SECRET = "hehehehha"
-console.log('DB_HOST:', process.env.DB_HOST);
-const db = await mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  ssl: { rejectUnauthorized: true }
-});
+// ===== Pool =====
+let pool;
+if (!global.pool) {
+  global.pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    waitForConnections: true,
+    connectionLimit: 10,
+    ssl: { rejectUnauthorized: true }
+  });
+}
+pool = global.pool;
 
 db.connect(err => {
     if (err) {
