@@ -11,7 +11,7 @@ app.use(express.json());
 
 
 const SECRET = "hehehehha"
-
+console.log('DB_HOST:', process.env.DB_HOST);
 const db = await mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
