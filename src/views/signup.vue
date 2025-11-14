@@ -47,7 +47,7 @@ function signup (): void {
         return
     }
     try{
-        axios.post("http://localhost:3000/signup", {
+        axios.post("https://fesnuk-mobile.vercel.app/signup", {
             username: username.value,
             password: password.value
         })

@@ -13,11 +13,11 @@ const SECRET = "hehehehha"
 
 // Koneksi ke database
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "db_aplikasi_ngawor",
-    port: 3308
+    host: process.env.TIDB_HOST,     // dari TiDB Cloud
+    port: 4000,                       // default TiDB port
+    user: process.env.TIDB_USER,
+    password: process.env.TIDB_PASS,
+    database: 'db_fesnuk'
 });
 
 db.connect(err => {
@@ -74,8 +74,8 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-    res.status(200).json({ 
-        message: "API berjalan dengan baik. Silakan gunakan endpoint /login atau lainnya." 
+    res.status(200).json({
+        message: "API berjalan dengan baik. Silakan gunakan endpoint /login atau lainnya."
     });
 });
 
@@ -157,7 +157,7 @@ app.post("/delete/:id_user/:id_post", verify, (req, res) => {
         if (err) return res.status(500).json({ message: "Server error" });
         if (resultc.length === 0) return res.status(404).json({ message: "Post tidak ditemukan" });
         const Delquery = "DELETE FROM tb_post WHERE id_user = ? AND id_post = ?"
-        db.query(Delquery, [id_user, id_post], (err, result)=>{
+        db.query(Delquery, [id_user, id_post], (err, result) => {
             if (err) {
                 console.log("UPDATE Query Error:", err)
                 return res.status(500).json({ message: "Server error" })
@@ -182,4 +182,4 @@ function verify(req, res, next) {
         next();
     });
 }
-module.exports = app;
+export default app;
