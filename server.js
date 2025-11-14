@@ -182,6 +182,4 @@ function verify(req, res, next) {
         next();
     });
 }
-app.listen(3000, "0.0.0.0", () => {
-    console.log("🚀 Server berjalan di http://0.0.0.0:3000");
-});
+module.exports = app;
