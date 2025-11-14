@@ -47,7 +47,7 @@ async function login() {
 
             localStorage.setItem('authToken', res.data.token)
             alert('berhasil login')
-            router.push(`/tabs/home/${res.data.user.id}`)
+            router.push(`/tabs/home`)
         } else {
             alert('pastikan username dan password benar!')
         }
