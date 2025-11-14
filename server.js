@@ -79,7 +79,7 @@ app.post("/signup", async (req, res) => {
         const sql = "INSERT INTO tb_akun (username, password) VALUES (?, ?)";
         await db.query(sql, [username, password]);
 
-        res.status(201).json({ message: "Akun berhasil dibuat" });
+        return res.status(201).json({ message: "Akun berhasil dibuat" });
     } catch (err) {
         console.error("Error saat signup:", err);
         return res.status(500).json({ message: "Gagal daftar karena error server" });
@@ -129,7 +129,7 @@ app.get("/home", verify, async (req, res) => {
         const [results] = await db.query(sql, [id_user]);
 
         if (results.length > 0) {
-            res.json({
+            return res.json({
                 message: `Meload content untuk user ${id_user} berhasil`,
                 content: results
             });
@@ -172,17 +172,17 @@ app.get("/edit/:id_post", verify, async (req, res) => {
 // =======================================================
 app.post("/add", verify, async (req, res) => {
     const id_user = req.user.id;
-    const { Head, Body } = req.body;
+    const {id_post, Head, Body } = req.body;
     
     if (!Head || !Body) {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
     }
 
-    const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?)";
+    const query = "INSERT INTO tb_post (id_post ,id_user, Head, Body) VALUES (?, ?, ?, ?)";
 
     try {
-        await db.query(query, [id_user, Head, Body]);
-        res.status(201).json({ message: "Berhasil dibuat" });
+        await db.query(query, [id_post, id_user, Head, Body]);
+        return res.status(201).json({ message: "Berhasil dibuat" });
     } catch (err) {
         console.error("Error saat menambah post:", err);
         return res.status(500).json({ message: "Gagal membuat content" });
