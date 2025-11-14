@@ -64,7 +64,7 @@ app.post("/login", (req, res) => {
                 message: "Login berhasil",
                 token: token,
                 user: {
-                    id: user.id,
+                    id: user.id_user,
                     user: user.username
                 }
             });
