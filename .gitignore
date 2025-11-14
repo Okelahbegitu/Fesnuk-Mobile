@@ -1,0 +1,61 @@
+# ===========================
+# Node / Ionic
+# ===========================
+node_modules/
+npm-debug.log
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.pnpm-store/
+.pnp/
+.pnp.js
+
+# Ionic build
+www/
+coverage/
+dist/
+.platforms/
+
+# Capacitor
+capacitor.config.json.backup
+# (config.ts jangan diignore kalau kamu pakai ts version)
+# capacitor.config.ts
+
+# Environment
+.env
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Android (Capacitor native)
+# ===========================
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+android/app/release/
+android/app/debug/
+
+# Signing / Keystore (SANGAT penting!)
+*.keystore
+*.jks
+
+# ===========================
+# iOS (kalau ada)
+# ===========================
+ios/App/build/
+ios/App/Pods/
+ios/App/*.xcworkspace
+ios/App/*.xcodeproj/project.xcworkspace/
+ios/App/*.xcworkspace/
+ios/App/Podfile.lock
