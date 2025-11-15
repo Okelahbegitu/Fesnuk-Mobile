@@ -34,10 +34,6 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'edit/:id_post',
         component: () => import('@/views/edit.vue')
-      },
-      {
-        path: 'delete/:id_post',
-        component: () => import('@/views/delete.vue')
       }
     ]
   }
