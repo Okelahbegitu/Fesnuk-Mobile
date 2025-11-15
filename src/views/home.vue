@@ -76,7 +76,7 @@
 import { 
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardContent, 
   IonCardTitle, IonButton, IonFab, IonIcon, IonFabButton, IonAlert, IonToast,
-  onIonViewWillEnter // <<< PERUBAHAN KRITIS
+  onIonViewWillEnter
 } from '@ionic/vue';
 import { addCircle } from 'ionicons/icons';
 import { ref } from "vue";
@@ -89,8 +89,8 @@ const showLogoutAlert = ref(false);
 const showToast = ref(false);
 const toastMessage = ref('');
 const toastColor = ref<'success' | 'danger'>('success');
-const postIdToDelete = ref<number | null>(null); // State untuk menyimpan ID post yang akan dihapus
-const showDeleteAlert = ref(false); // State untuk menampilkan konfirmasi hapus
+const postIdToDelete = ref<number | null>(null);
+const showDeleteAlert = ref(false);
 
 // Base URL
 const API_BASE_URL = "https://fesnuk-mobile.vercel.app";
@@ -176,7 +176,7 @@ const logoutAlertButtons = [
   { text: 'Ya', role: 'confirm', handler: handleLogout },
 ];
 
-// MENGGANTI onMounted() dengan onIonViewWillEnter()
+
 onIonViewWillEnter(() => {
   fetchPosts();
 });
