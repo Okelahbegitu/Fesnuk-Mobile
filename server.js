@@ -1,6 +1,6 @@
 import express from "express";
 // Ubah import ke mysql2/promise untuk fungsionalitas Promise Pool
-import mysql from "mysql2/promise"; 
+import mysql from "mysql2/promise";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv';
@@ -29,23 +29,27 @@ const db = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
     // Diperbarui: Mengizinkan sertifikat yang tidak diverifikasi, baik untuk Vercel
-    ssl: { rejectUnauthorized: false }, 
+    ssl: { rejectUnauthorized: false },
     waitForConnections: true,
     connectionLimit: 10,
     // Ditambahkan: Konfigurasi Keep Alive untuk Vercel
-    enableKeepAlive: true, 
+    enableKeepAlive: true,
     keepAliveInitialDelay: 0,
 });
 
 async function testDbConnection() {
     try {
         // Melakukan query sederhana untuk memverifikasi koneksi
-        await db.query('SELECT 1'); 
+        await db.query('SELECT 1');
         console.log("✅ Terhubung ke database MySQL (Pool connection verified)");
     } catch (err) {
         // Jika ETIMEDOUT atau error lain terjadi di sini, itu adalah masalah KONEKSI/FIREWALL
         console.error("❌ Koneksi Gagal Saat Verifikasi Pool:", err.message);
         console.error(">>> ERROR KRITIS: Pastikan server DB berjalan, firewall port 4000 terbuka, dan bind-address = 0.0.0.0.");
+        console.error("❌ Koneksi Gagal:", err);
+        console.error("Kode error:", err.code);
+        console.error("Errno:", err.errno);
+        console.error("SQLSTATE:", err.sqlState);
     }
 }
 testDbConnection();
@@ -100,7 +104,7 @@ app.post("/login", async (req, res) => {
     try {
         // Query menggunakan Pool
         const sql = "SELECT id_user, username FROM tb_akun WHERE username = ? AND password = ?";
-        const [results] = await db.query(sql, [username, password]); 
+        const [results] = await db.query(sql, [username, password]);
 
         if (results.length > 0) {
             const user = results[0];
@@ -127,7 +131,7 @@ app.post("/login", async (req, res) => {
 // API: Home
 // =======================================================
 app.get("/home", verify, async (req, res) => {
-    const id_user = req.user.id; 
+    const id_user = req.user.id;
     const sql = "SELECT * FROM tb_post WHERE id_user = ?";
 
     try {
@@ -175,18 +179,18 @@ app.get("/edit/:id_post", verify, async (req, res) => {
 app.post("/add", verify, async (req, res) => {
     const id_user = req.user.id;
     // id_post tidak diambil karena auto-increment
-    const { Head, Body } = req.body; 
-    
+    const { Head, Body } = req.body;
+
     if (!Head || !Body) {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
     }
 
     // Perbaikan: Hanya 3 placeholder untuk 3 nilai
-    const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?)"; 
+    const query = "INSERT INTO tb_post (id_user, Head, Body) VALUES (?, ?, ?)";
 
     try {
         await db.query(query, [id_user, Head, Body]);
-        return res.status(201).json({ 
+        return res.status(201).json({
             message: "Berhasil dibuat",
             user: { id: id_user }
         });
@@ -203,7 +207,7 @@ app.put("/edit/:id_post", verify, async (req, res) => {
     const id_user = req.user.id;
     const id_post = req.params.id_post;
     const { Head, Body } = req.body;
-    
+
     if (!Head || !Body) {
         return res.status(400).json({ message: "Judul dan Isi post harus diisi." });
     }
@@ -211,7 +215,7 @@ app.put("/edit/:id_post", verify, async (req, res) => {
     try {
         const updateQuery = "UPDATE tb_post SET Head = ?, Body = ? WHERE id_post = ? AND id_user = ?";
         const [resultu] = await db.query(updateQuery, [Head, Body, id_post, id_user]);
-        
+
         if (resultu.affectedRows > 0) {
             return res.status(200).json({ message: "Berhasil update post" });
         } else {
@@ -236,7 +240,7 @@ app.delete("/delete/:id_post", verify, async (req, res) => {
         const [result] = await db.query(Delquery, [id_user, id_post]);
 
         if (result.affectedRows > 0) {
-            return res.status(200).json({ message: "Berhasil hapus post", user: { id: id_user} });
+            return res.status(200).json({ message: "Berhasil hapus post", user: { id: id_user } });
         } else {
             return res.status(404).json({ message: "Post tidak ditemukan atau Anda tidak memiliki izin" });
         }
