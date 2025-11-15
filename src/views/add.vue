@@ -43,7 +43,7 @@ async function addNewPost(Nhead: string, Nbody: string, iduser: string) {
             Head: Nhead,
             Body: Nbody
         }, {headers: {'Authorization': `Bearer ${authToken}`}})
-        router.push(`/tabs/home/${res.data.user.id}`)
+        router.push(`/tabs/home`)
     } catch (err){
         alert(err);
     }

@@ -51,7 +51,7 @@ async function Delete() {
     );
 
     alert(res.data.message);
-    router.push(`/tabs/home/${res.data.user.id}`);
+    router.push(`/tabs/home`);
   } catch (e) {
     alert(e);
   }
