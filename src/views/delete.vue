@@ -19,7 +19,7 @@
                 <IonCardContent>
                     <p>Yakin ingin dihapus?</p>
                     <IonButton @click="Delete" color="danger">Iya</IonButton>
-                    <IonButton @click="router.push(`/tabs/home/${idUser}`)" color="success">Batal</IonButton>
+                    <IonButton @click="router.push(`/tabs/home`)" color="success">Batal</IonButton>
                 </IonCardContent>
             </IonCard>
         </ion-content>

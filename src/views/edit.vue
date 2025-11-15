@@ -58,7 +58,7 @@ async function UpdatePost (idUser: string, idPost: string, HeadU: string, BodyU:
       body: BodyU
     }, {headers: {'Authorization': `Bearer ${authToken}`}});
     alert(res.data.message);
-    router.push(`/tabs/home/${idUser}`)
+    router.push(`/tabs/home`)
   } catch (err) {
     alert(err);
   }
