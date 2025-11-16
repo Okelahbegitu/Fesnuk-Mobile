@@ -51,6 +51,7 @@ function signup (): void {
             username: username.value,
             password: password.value
         })
+        router.push('tabs/login')
     } catch (err){
         alert(err)
     }
